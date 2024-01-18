@@ -1,7 +1,7 @@
 from openweather import *
 from datetime import datetime
 
-weatherApiKey = "1e8916214f329eb63fe4956810360e09" 
+weatherApiKey = "" 
 
 weatherData = getUsWeather("Bedford", "MA", "imperial", weatherApiKey)
 sunsetDt = getSunsetToday(weatherData)

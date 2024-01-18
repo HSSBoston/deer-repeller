@@ -1,8 +1,5 @@
 # Library to access and use OpenWeatherMap
 # Oct 7, 2023 v0.06
-# Hanna Suzuki (https://github.com/hssboston)
-# Jun Suzuki (https://github.com/jxsboston)
-# IoT for Kids: https://jxsboston.github.io/IoT-Kids/
 #
 # This library uses OpenWeather's One Call API 1.0 and
 # Geocoding API:

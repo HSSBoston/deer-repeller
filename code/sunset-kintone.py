@@ -1,20 +1,30 @@
 from openweather import *
 from datetime import datetime
-import time, explorerhat as hat
+import kintone, time
+# import explorerhat as hat
 
-weatherApiKey = "" 
-sdomain = "jxsboston"
-appId = "22"
+weatherApiKey = ""
+sdomain = ""
+appId = ""
 token = ""
+zipCode = ""
+countryCode = ""
 
-def turnOnPump():
-    hat.output.one.on()
-    time.sleep(10)
-    hat.output.one.off()
-
+def turnOnPump(duration):
+    print("!")
+#     hat.output.one.on()
+#     hat.output.two.on()
+#     time.sleep(duration)
+#     hat.output.one.off()
+#     hat.output.two.off()
+    
+def getWeekDay(currentDt):
+    daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    return daysOfWeek[currentDt.weekday()]
+    
 while True:
     try:
-        weatherData = getUsWeather("Bedford", "MA", "imperial", weatherApiKey)
+        weatherData = getZipWeather(zipCode, countryCode, "imperial", weatherApiKey)
         sunsetDt = getSunsetToday(weatherData)
         sunsetHr = sunsetDt.hour
         sunsetMin = sunsetDt.minute
@@ -22,30 +32,31 @@ while True:
         currentDt = datetime.now()
         currentHr = currentDt.hour
         currentMin = currentDt.minute
-         
-        print(sunsetHr, sunsetMin)
-        print(currentHr, currentMin)
-
+        currentWkDay = getWeekDay(currentDt)
+ 
         record = kintone.getRecord(subDomain=sdomain,
                                    apiToken=token,
                                    appId=appId,
                                    recordId="1")
-        onNow = record["on_now"]["value"]
-        schedule = record["schedule"]["value"]
+        onNow = record["onNow"]["value"]
+        weeklySchedule = record["weeklySchedule"]["value"]
+        onSchedule = record["onSchedule"]["value"]
         scheduledTime = record["scheduledTime"]["value"]
-        time = record["time"]["value"]
+        duration = int(record["duration"]["value"])
         
         if onNow == "Yes":
-            turnOnPump()
-        
-        if scheduledTime == "Sunset time":
-            if currentHr == sunsetHr and currentMin == sunsetMin:
-                turnOnPump()
-        
-        if scheduledTime == "Another time":
-            turnOnPump()
-
+            turnOnPump(duration)
+        elif currentWkDay in weeklySchedule:
+            if "Sunset time" in onSchedule:
+                if (currentHr == sunsetHr and
+                    currentMin == sunsetMin):
+                    turnOnPump(duration)        
+            if "Another time" in onSchedule:
+                schedTime = scheduledTime.split(":")
+                schedHr = schedTime[0]
+                schedMin = schedTime[1]
+                if currentHr == schedHr and currentMin == schedMin:
+                    turnOnPump(duration)
         time.sleep(60)
-
-    except: KeyboardInterrupt:
-        
+    except KeyboardInterrupt:
+        break

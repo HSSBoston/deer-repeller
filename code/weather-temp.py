@@ -3,8 +3,8 @@ from openweather import *
 weatherApiKey = "1e8916214f329eb63fe4956810360e09" 
 
 # Latitude and longitude of Logan airport
-latitude = 42.3663
-longitude = -71.0095
+latitude = 
+longitude = 
 
 weatherData = getLatLonWeather(latitude, longitude, "imperial", weatherApiKey)
 

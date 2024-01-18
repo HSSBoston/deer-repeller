@@ -1,6 +1,5 @@
 # Library to access and use Kintone apps
-# December 21, 2021 v0.05
-# Jun Suzuki (https://github.com/jxsboston)
+# September 27, 2023 v0.06
 # IoT for Kids: https://jxsboston.github.io/IoT-Kids/
 
 import requests, json, datetime
@@ -107,4 +106,84 @@ def getRecord(*, subDomain: str, apiToken: str, appId: str, recordId: str) -> Op
     else:
         print("Record download failed. Status code: " + str(response.status_code))
         return None
+
+# Function to download an attachment file from a Kintone app
+#   subDomain (string): Name of a subdomain where the Kitone app runs
+#   apiToken (string):  API token to access the Kintone app
+#   fileKey (string):  Key of the file to download
+#   fileName (string): Name for the downloaded file to be saved as
+#
+#   This function accepts keyword arguments only. 
+#
+def downloadFile(*, subDomain: str, apiToken: str, fileKey: str, fileName: str):
+    url = "https://" + subDomain + ".kintone.com/k/v1/file.json?fileKey=" + fileKey
+    headers = {"X-Cybozu-API-Token": apiToken}
+   
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        print("File downloaded. File key: " + fileKey)
+        print("Content-Type: " + response.headers["Content-Type"])
+#         if "Content-Disposition" in response.headers:
+#             print("File name: " +
+#                   response.headers["Content-Disposition"].replace("attachment; filename=","")[1:-1])
+        with open(fileName, "wb") as f:
+            f.write(response.content)
+            print("Saved as: " + fileName)
+    else:
+        print("File download failed. Status code: " + str(response.status_code))
+
+# Function to return the total number of records in a Kintone app
+#   subDomain (string): Name of a subdomain where the Kitone app runs
+#   apiToken (string):  API token to access the Kintone app
+#   appId (string):     ID of the Kitone app
+#
+#   Returns the number of records as an integer
+#
+#   This function accepts keyword arguments only. 
+#
+def getRecordCount(*, subDomain: str, apiToken: str, appId: str):
+    url = "https://" + subDomain + ".kintone.com/k/v1/records.json"
+    headers = {"X-Cybozu-API-Token": apiToken,
+               "Content-Type": "application/json"}
+    payload = {"app": appId,
+               "fields": ["$id"],
+               "totalCount": "true"}
+   
+    response = requests.get(url, headers=headers, json=payload)
+    if response.status_code == 200 and "totalCount" in json.loads(response.text):
+        return int( json.loads(response.text)["totalCount"] )
+    else:
+        print("getRecordCount() failed. Status code: " + str(response.status_code))
+        return None
+
+#
+#
+# Returns a query result (records) as a dictionary
+#
+def query(*, subDomain: str, apiToken: str, appId: str, queryString: str):
+    url = "https://" + subDomain + ".kintone.com/k/v1/records.json"
+    headers = {"X-Cybozu-API-Token": apiToken,
+               "Content-Type": "application/json"}
+    payload = {"app": appId,
+               "query": queryString,
+               "fields": [],
+               "totalCount": "true"}
+   
+    response = requests.get(url, headers=headers, json=payload)
+    if response.status_code == 200:
+        return json.loads(response.text)
+    else:
+        print("query() failed. Status code: " + str(response.status_code))
+        return None
+
+#
+#
+# Returns a query result as a dictionary
+#
+def getMostRecentRecord(*, subDomain: str, apiToken: str, appId: str):
+    queryString = "order by $id desc limit 1"
+    qResult = query(subDomain=subDomain, apiToken=apiToken, appId=appId, queryString=queryString)
+    return qResult["records"][0]
+
+
 
